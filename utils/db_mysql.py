@@ -2,25 +2,74 @@ import mysql.connector
 from mysql.connector import errorcode, Error
 from dotenv import load_dotenv
 import os
+from urllib.parse import urlparse
 
 # Load environment variables
 load_dotenv()
 
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_USER = os.getenv("DB_USER", "root")
-DB_PASS = os.getenv("DB_PASS", "")  # set via .env; avoid hardcoded default
-DB_NAME = os.getenv("DB_NAME", "survey_app")
+# Check if DATABASE_URL is available (Railway style)
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+# Debug: Print all environment variables
+print(f"DEBUG: All environment variables:")
+for key, value in os.environ.items():
+    if 'DB' in key or 'DATABASE' in key or 'MYSQL' in key:
+        print(f"DEBUG: {key} = {value}")
+
+print(f"DEBUG: DATABASE_URL = {DATABASE_URL}")
+
+# TEMPORARY: Force Railway connection if DATABASE_URL is not set
+if not DATABASE_URL:
+    DATABASE_URL = "mysql://root:iRupakyOogdPMNvyfMWsWkmBFTJbFdRi@shinkansen.proxy.rlwy.net:47372/railway"
+    print(f"DEBUG: Using hardcoded Railway connection as fallback")
+
+if DATABASE_URL:
+    # Parse DATABASE_URL (mysql://user:pass@host:port/db)
+    parsed = urlparse(DATABASE_URL)
+    DB_HOST = parsed.hostname
+    DB_PORT = parsed.port or 3306
+    DB_USER = parsed.username
+    DB_PASS = parsed.password
+    DB_NAME = parsed.path.lstrip('/')
+    DB_SSL_DISABLED = False  # Railway handles SSL
+    DB_SSL_CA = None
+    print(f"DEBUG: Parsed from DATABASE_URL - Host: {DB_HOST}, Port: {DB_PORT}, User: {DB_USER}, DB: {DB_NAME}")
+else:
+    # Fallback to individual environment variables
+    DB_HOST = os.getenv("DB_HOST", "localhost")
+    DB_PORT = int(os.getenv("DB_PORT", "3306"))
+    DB_USER = os.getenv("DB_USER", "root")
+    DB_PASS = os.getenv("DB_PASS", "")  # set via .env; avoid hardcoded default
+    DB_NAME = os.getenv("DB_NAME", "survey_app")
+    DB_SSL_DISABLED = os.getenv("DB_SSL_DISABLED", "false").lower() in ("1", "true", "yes")
+    DB_SSL_CA = os.getenv("DB_SSL_CA")  # optional absolute path to CA cert if provider requires
+    print(f"DEBUG: Using individual variables - Host: {DB_HOST}, Port: {DB_PORT}, User: {DB_USER}, DB: {DB_NAME}")
 
 # --- Connection ---
 def get_connection(create_db_if_missing=True):
     """Get MySQL connection, optionally creating DB if missing."""
     try:
-        conn = mysql.connector.connect(
-            host=DB_HOST,
-            user=DB_USER,
-            password=DB_PASS,
-            database=DB_NAME
-        )
+        # Debug: Print connection parameters
+        print(f"DEBUG: Attempting to connect to MySQL")
+        print(f"DEBUG: DATABASE_URL exists: {bool(DATABASE_URL)}")
+        print(f"DEBUG: DB_HOST: {DB_HOST}")
+        print(f"DEBUG: DB_PORT: {DB_PORT}")
+        print(f"DEBUG: DB_USER: {DB_USER}")
+        print(f"DEBUG: DB_NAME: {DB_NAME}")
+        
+        connect_kwargs = {
+            "host": DB_HOST,
+            "port": DB_PORT,
+            "user": DB_USER,
+            "password": DB_PASS,
+            "database": DB_NAME,
+            "connection_timeout": 10,
+        }
+        # Optional SSL config for managed MySQL providers
+        if not DB_SSL_DISABLED and DB_SSL_CA:
+            connect_kwargs["ssl_ca"] = DB_SSL_CA
+            connect_kwargs["ssl_verify_cert"] = True
+        conn = mysql.connector.connect(**connect_kwargs)
         return conn
     except mysql.connector.Error as err:
         if err.errno == errorcode.ER_BAD_DB_ERROR and create_db_if_missing:
