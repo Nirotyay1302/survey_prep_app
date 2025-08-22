@@ -8,7 +8,7 @@ load_dotenv()
 
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_USER = os.getenv("DB_USER", "root")
-DB_PASS = os.getenv("DB_PASS", "@tojo1234")
+DB_PASS = os.getenv("DB_PASS", "")  # set via .env; avoid hardcoded default
 DB_NAME = os.getenv("DB_NAME", "survey_app")
 
 # --- Connection ---

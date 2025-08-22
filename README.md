@@ -1,4 +1,27 @@
 AI-Enhanced Survey Dashboard
+
+Environment variables (.env)
+
+Set these in your deployment environment; do not commit secrets:
+
+- FLASK_ENV=production
+- SECRET_KEY=replace-with-a-strong-random-string
+- DB_HOST=your-mysql-host
+- DB_USER=your-mysql-user
+- DB_PASS=your-mysql-password
+- DB_NAME=survey_app
+
+Local quickstart
+
+1) python -m venv venv && venv\Scripts\activate
+2) pip install -r requirements.txt
+3) set FLASK_APP=app.py & set FLASK_ENV=development
+4) python app.py
+
+Deploy
+
+- Backend: Render/Heroku/Fly.io with Python, set env vars above.
+- Static front-end (optional landing): Netlify. Point to `templates` static build or a dedicated front-end.
 An interactive Streamlit web application for uploading survey data, configuring analysis parameters, generating insightful reports, and exporting them as HTML or PDF dashboards with colorful visualizations.
 
 🚀 Features
