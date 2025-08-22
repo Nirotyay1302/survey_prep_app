@@ -1,0 +1,78 @@
+/* Clean, neutral theme with card color accents */
+:root {
+	--primary: #2563eb;
+	--bg: #f5f6f8;
+	--surface: #ffffff;
+	--text: #111827;
+	--muted: #6b7280;
+	--card-border: rgba(17, 24, 39, 0.06);
+}
+
+html, body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
+	color: var(--text);
+	background-color: var(--bg);
+}
+
+.navbar.bg-dark {
+	background-color: #0f172a !important; /* slate-900 */
+	box-shadow: 0 2px 6px rgba(2, 6, 23, 0.25);
+}
+.navbar .nav-link { opacity: 0.95; }
+.navbar .nav-link:hover { opacity: 1; text-decoration: none; }
+
+.card {
+	border: 1px solid var(--card-border);
+	border-radius: 12px;
+	background-color: var(--surface);
+	box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.card-header {
+	border-bottom: 1px solid var(--card-border);
+	background: #fafafa;
+	font-weight: 600;
+}
+
+.btn-primary {
+	background-color: var(--primary);
+	border-color: var(--primary);
+}
+.btn-primary:hover { filter: brightness(0.98); }
+
+.form-control:focus, .form-select:focus {
+	border-color: #93c5fd;
+	box-shadow: 0 0 0 0.15rem rgba(37, 99, 235, 0.25);
+}
+
+.table { background: var(--surface); border-radius: 10px; overflow: hidden; }
+.table thead th { background: #f3f4f6; font-weight: 600; }
+.table-hover tbody tr:hover { background-color: #f9fafb; }
+.table-responsive .table thead th { position: sticky; top: 0; z-index: 1; }
+
+img.img-fluid { border-radius: 10px; }
+
+footer a { color: #6b7280; }
+footer a:hover { color: #374151; text-decoration: none; }
+
+/* Card theme accents */
+.card-theme-blue { border-left: 4px solid #3b82f6; }
+.card-theme-blue .card-header { background-color: #eff6ff; color: #1e40af; }
+
+.card-theme-green { border-left: 4px solid #10b981; }
+.card-theme-green .card-header { background-color: #ecfdf5; color: #065f46; }
+
+.card-theme-amber { border-left: 4px solid #f59e0b; }
+.card-theme-amber .card-header { background-color: #fffbeb; color: #92400e; }
+
+.card-theme-slate { border-left: 4px solid #94a3b8; }
+.card-theme-slate .card-header { background-color: #f8fafc; color: #334155; }
+
+/* Utilities */
+.rounded-12 { border-radius: 12px !important; }
+
+/* Mobile tweaks */
+@media (max-width: 576px) {
+	.container-narrow { padding-left: 12px; padding-right: 12px; }
+	.navbar .navbar-text { display: none; }
+}
+

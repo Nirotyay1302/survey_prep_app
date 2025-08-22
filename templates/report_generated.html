@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Report Generated - Survey Prep App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>📄 Report Generated Successfully</h2>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<!-- Report Summary -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📊 Processing Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <p><strong>File:</strong> {{ job.uploaded_filename }}</p>
+                        <p><strong>Rows:</strong> {{ job.rows_before }} → {{ job.rows_after }}</p>
+                        <p><strong>Imputation:</strong> {{ job.impute_method }}</p>
+                    </div>
+                    <div class="col-6">
+                        <p><strong>Outlier Method:</strong> {{ job.outlier_method }}</p>
+                        <p><strong>Weight Column:</strong> {{ job.weight_col or 'None' }}</p>
+                        <p><strong>Violations:</strong> {{ job.violations_count or 0 }}</p>
+                    </div>
+                </div>
+                <p><strong>Processed:</strong> {{ job.created_at.strftime('%Y-%m-%d %H:%M') if job.created_at else 'N/A' }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📋 Generated Reports</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">📄 HTML Report</h6>
+                            <small class="text-muted">Interactive web report with visualizations</small>
+                        </div>
+                        <a href="{{ url_for('download_report', job_id=job.id, format='html') }}" 
+                           class="btn btn-primary btn-sm">Download HTML</a>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">📄 PDF Report</h6>
+                            <small class="text-muted">Professional PDF document for printing</small>
+                        </div>
+                        <a href="{{ url_for('download_report', job_id=job.id, format='pdf') }}" 
+                           class="btn btn-success btn-sm">Download PDF</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Preview -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">👁️ Report Preview</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Report Contents Include:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>📊 Processing workflow and methodology</li>
+                        <li>📈 Summary statistics with margins of error</li>
+                        <li>📉 Data visualizations (histograms)</li>
+                        <li>🔍 Data quality diagnostics</li>
+                        <li>📋 Processing parameters and configuration</li>
+                        <li>📅 Timestamp and user information</li>
+                    </ul>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>HTML Report Features:</h6>
+                        <ul>
+                            <li>Interactive web format</li>
+                            <li>Embedded visualizations</li>
+                            <li>Easy to share via email</li>
+                            <li>Viewable in any web browser</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>PDF Report Features:</h6>
+                        <ul>
+                            <li>Professional document format</li>
+                            <li>Print-ready layout</li>
+                            <li>Archival quality</li>
+                            <li>MoSPI compliance ready</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('view_details', job_id=job.id) }}" class="btn btn-outline-primary">← Back to Job Details</a>
+            <a href="{{ url_for('process_form') }}" class="btn btn-primary">🚀 Process New Data</a>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

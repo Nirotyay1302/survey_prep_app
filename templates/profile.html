@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% block title %}My Profile · Survey Prep{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Profile - {{ user.username }}</h2>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+      </div>
+      
+      <!-- User Info Section -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">👤 Account Information</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>Username:</strong> {{ user.username }}</p>
+              <p><strong>Email:</strong> {{ user.email }}</p>
+              <p><strong>Role:</strong> {{ user.role }}</p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>Total Jobs:</strong> {{ recent_jobs|length }}</p>
+              <p><strong>Saved Jobs:</strong> {{ saved_jobs|length }}</p>
+              <p><strong>Total Rows Processed:</strong> {{ recent_jobs|sum(attribute='rows_after') or 0 }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Saved Jobs Section -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">📚 Saved Jobs</h5>
+        </div>
+        <div class="card-body">
+          {% if saved_jobs %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>File Name</th>
+                  <th>Data Summary</th>
+                  <th>Processing Details</th>
+                  <th>Saved As</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for job in saved_jobs %}
+                <tr>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span class="fw-bold">{{ job.uploaded_filename }}</span>
+                      <small class="text-muted">{{ job.created_at.strftime('%Y-%m-%d %H:%M') if job.created_at else 'N/A' }}</small>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span>{{ job.rows_before }} → {{ job.rows_after }} rows</span>
+                      <small class="text-muted">{{ job.violations_count or 0 }} violations</small>
+                    </div>
+                  </td>
+                  <td>
+                    <small>
+                      <div>Impute: {{ job.impute_method or 'None' }}</div>
+                      <div>Outliers: {{ job.outlier_method or 'None' }}</div>
+                      <div>Weight: {{ job.weight_col or 'None' }}</div>
+                    </small>
+                  </td>
+                  <td>
+                    <span class="badge bg-success">{{ job.display_name or 'Unnamed' }}</span>
+                  </td>
+                  <td>
+                                        <div class="d-flex gap-1 flex-wrap">
+                        <a href="{{ url_for('view_details', job_id=job.id) }}" class="btn btn-sm btn-outline-info">View Details</a>
+                        <a href="{{ url_for('generate_report', job_id=job.id) }}" class="btn btn-sm btn-outline-warning">📄 Report</a>
+                        <form method="POST" action="{{ url_for('delete_job', job_id=job.id) }}" class="d-inline" 
+                              onsubmit="return confirm('Are you sure you want to delete this saved job? This action cannot be undone.')">
+                            <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                        </form>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-4">
+            <p class="text-muted mb-3">No saved jobs yet.</p>
+            <small class="text-muted">Process data and save jobs to see them here.</small>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      
+      <!-- Recent Jobs Section -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">📊 Recent Processing Activity</h5>
+        </div>
+        <div class="card-body">
+          {% if recent_jobs %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>File Name</th>
+                  <th>Data Summary</th>
+                  <th>Processing Details</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for job in recent_jobs %}
+                <tr>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span class="fw-bold">{{ job.uploaded_filename }}</span>
+                      <small class="text-muted">{{ job.created_at.strftime('%Y-%m-%d %H:%M') if job.created_at else 'N/A' }}</small>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span>{{ job.rows_before }} → {{ job.rows_after }} rows</span>
+                      <small class="text-muted">{{ job.violations_count or 0 }} violations</small>
+                    </div>
+                  </td>
+                  <td>
+                    <small>
+                      <div>Impute: {{ job.impute_method or 'None' }}</div>
+                      <div>Outliers: {{ job.outlier_method or 'None' }}</div>
+                      <div>Weight: {{ job.weight_col or 'None' }}</div>
+                    </small>
+                  </td>
+                  <td>
+                    {% if job.is_saved %}
+                      <span class="badge bg-success">Saved</span>
+                    {% else %}
+                      <span class="badge bg-secondary">Not Saved</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                                        <div class="d-flex gap-1 flex-wrap">
+                        <a href="{{ url_for('view_details', job_id=job.id) }}" class="btn btn-sm btn-outline-info">View Details</a>
+                        <a href="{{ url_for('generate_report', job_id=job.id) }}" class="btn btn-sm btn-outline-warning">📄 Report</a>
+                        {% if not job.is_saved %}
+                        <form method="POST" action="{{ url_for('save_job_route') }}" class="d-flex gap-1">
+                            <input type="hidden" name="job_id" value="{{ job.id }}" />
+                            <input type="text" name="display_name" class="form-control form-control-sm" placeholder="Save as..." style="max-width:120px" />
+                            <button class="btn btn-sm btn-outline-primary" type="submit">Save</button>
+                        </form>
+                        {% endif %}
+                        <form method="POST" action="{{ url_for('delete_job', job_id=job.id) }}" class="d-inline" 
+                              onsubmit="return confirm('Are you sure you want to delete this job? This action cannot be undone.')">
+                            <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                        </form>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-4">
+            <p class="text-muted mb-3">No recent processing activity.</p>
+            <a href="{{ url_for('process_form') }}" class="btn btn-primary">Process Your First File</a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

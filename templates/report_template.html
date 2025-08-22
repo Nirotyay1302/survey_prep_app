@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ title or 'Survey Data Report' }}</title>
+    <style>
+        :root { --primary:#1f6feb; --muted:#666; }
+        body { font-family: Arial, sans-serif; margin: 24px; color:#222; }
+        header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:16px; }
+        header .meta { color: var(--muted); font-size: 0.9rem; }
+        h1 { margin:0 0 4px 0; }
+        h2 { color:#333; margin-top:24px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background-color: #f6f8fa; }
+        .section { margin-top: 18px; }
+        .log { background-color: #f0f7ff; padding: 12px; margin-bottom: 20px; border-radius: 6px; border:1px solid #e0eefc; }
+        .grid { display: flex; flex-wrap: wrap; gap: 12px; }
+        .card { border:1px solid #eee; border-radius:6px; padding:10px; }
+        img { max-width: 420px; margin: 6px; border: 1px solid #ddd; padding: 5px; border-radius:4px; }
+        .small { font-size: 0.9rem; color:#444; }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Survey data processing report" />
+    <meta name="author" content="{{ meta.prepared_by or 'Survey Prep App' }}" />
+</head>
+<body>
+    <header>
+        <div>
+            <h1>{{ title or 'Survey Data Processing Report' }}</h1>
+            <div class="meta small">Generated: {{ meta.generated_at or '' }}</div>
+        </div>
+        <div class="small">
+            <div><strong>Rows</strong>: {{ meta.rows_before or '-' }} → {{ meta.rows_after or '-' }}</div>
+            <div><strong>Violations</strong>: {{ meta.violations_count or 0 }}</div>
+            <div><strong>Impute</strong>: {{ meta.params.impute_method if meta and meta.params else '-' }}</div>
+            <div><strong>Outliers</strong>: {{ meta.params.outlier_method if meta and meta.params else '-' }}</div>
+            <div><strong>Weight</strong>: {{ meta.params.weight_col if meta and meta.params else '-' }}</div>
+            <div><strong>Value</strong>: {{ meta.params.value_col if meta and meta.params else '-' }}</div>
+        </div>
+    </header>
+
+    <div class="section">
+        <h2>Workflow Logs</h2>
+        <div class="log">
+            <ul>
+            {% for log in workflow_logs %}
+                <li>{{ log }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Weighted Summary Statistics</h2>
+        <div>
+            {{ summary_table | safe }}
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Histograms</h2>
+        <div class="grid">
+        {% for col, img in histograms.items() %}
+            <div class="card">
+                <div class="small" style="margin-bottom:6px"><strong>{{ col }}</strong></div>
+                <img src="data:image/png;base64,{{ img }}" alt="Histogram of {{ col }}">
+            </div>
+        {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

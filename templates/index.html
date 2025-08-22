@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - Survey Prep App{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <h1 class="display-4 mb-4">Survey Data Processing Platform</h1>
+        <p class="lead mb-5">AI-enhanced survey data processing with automated cleaning, weighting, and standardized reporting for MoSPI initiatives.</p>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">📊 Data Ingestion</h5>
+                        <p class="card-text">Upload CSV/Excel survey files and configure schema mapping through an intuitive interface.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">🧹 Automated Cleaning</h5>
+                        <p class="card-text">Advanced imputation, outlier detection, and rule-based validation for data quality assurance.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">⚖️ Weight Application</h5>
+                        <p class="card-text">Apply design weights and compute weighted estimates with margins of error.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row g-4 mt-2">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">📈 Analytics & Reports</h5>
+                        <p class="card-text">Generate standardized HTML/PDF reports with visualizations and workflow diagnostics.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">🎯 MoSPI Integration</h5>
+                        <p class="card-text">Supports national priorities for improving data quality and efficiency through automation.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-5">
+            {% if session.get('user') %}
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg me-3">Go to Dashboard</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg me-3">Login</a>
+                <a href="{{ url_for('signup') }}" class="btn btn-outline-primary btn-lg">Sign Up</a>
+            {% endif %}
+        </div>
+        
+        <div class="mt-4">
+            <small class="text-muted">
+                <strong>Key Features:</strong> Missing-value imputation (Mean/Median/KNN) • Outlier detection (IQR/Z-score/Winsorize) • 
+                Rule-based validation • Design weight application • Automated report generation • User-friendly interface
+            </small>
+        </div>
+
+        {% if session.get('user') %}
+        <!-- 🔹 Data Upload + Preview Section (only for logged-in users) -->
+        <div class="card mt-5 shadow-sm">
+            <div class="card-body">
+                <h4 class="card-title">📂 Upload Survey File & Preview</h4>
+                <form id="uploadForm" enctype="multipart/form-data" class="mt-3">
+                    <input type="file" name="data_file" id="data_file" class="form-control mb-3" required>
+                    <button type="submit" class="btn btn-success">Preview Data</button>
+                </form>
+                <div id="preview" class="mt-4 text-start"></div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% if session.get('user') %}
+<script>
+document.getElementById("uploadForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const formData = new FormData();
+    const fileInput = document.getElementById("data_file");
+    formData.append("data_file", fileInput.files[0]);
+
+    const response = await fetch("/preview-data", {
+        method: "POST",
+        body: formData
+    });
+
+    const result = await response.json();
+
+    const previewDiv = document.getElementById("preview");
+    previewDiv.innerHTML = "";
+
+    if (result.error) {
+        previewDiv.innerHTML = `<p class="text-danger">${result.error}</p>`;
+    } else {
+        let table = "<div class='table-responsive'><table class='table table-bordered table-striped'>";
+        const keys = Object.keys(result.preview[0]);
+        table += "<thead><tr>";
+        keys.forEach(k => table += `<th>${k}</th>`);
+        table += "</tr></thead><tbody>";
+
+        result.preview.forEach(row => {
+            table += "<tr>";
+            keys.forEach(k => table += `<td>${row[k]}</td>`);
+            table += "</tr>";
+        });
+        table += "</tbody></table></div>";
+        previewDiv.innerHTML = table;
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

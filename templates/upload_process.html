@@ -1,0 +1,522 @@
+{% extends 'base.html' %}
+{% block title %}Process Survey Data · Survey Prep{% endblock %}
+
+{% block extra_head %}
+<style>
+.preview-table {
+    max-height: 400px;
+    overflow-y: auto;
+}
+.column-selector {
+    max-height: 200px;
+    overflow-y: auto;
+}
+.processing-status {
+    display: none;
+}
+.rule-example {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 5px;
+    font-family: monospace;
+    font-size: 0.9em;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>🚀 Survey Data Processing Pipeline</h2>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<!-- File Upload Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📁 Step 1: Data Upload</h5>
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Upload Survey Data File</label>
+                        <input class="form-control" type="file" id="dataFile" name="data_file" accept=".csv,.xlsx,.xls" required />
+                        <div class="form-text">
+                            <strong>Supported formats:</strong> CSV, Excel (.xlsx, .xls) | 
+                            <strong>Max size:</strong> 50MB | 
+                            <strong>Sample data:</strong> <a href="#" onclick="loadSampleData()">Load sample survey data</a>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="previewData()">
+                        📊 Preview Data
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Preview Section -->
+<div id="previewSection" class="row mb-4" style="display: none;">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">👁️ Step 2: Data Preview & Column Selection</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>📋 Dataset Information</h6>
+                        <div id="datasetInfo" class="mb-3">
+                            <!-- Dataset info will be populated here -->
+                        </div>
+                        
+                        <h6>🎯 Column Selection</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Weight Column (Optional)</label>
+                            <select class="form-select" id="weightCol" name="weight_col">
+                                <option value="">No weights</option>
+                            </select>
+                            <div class="form-text">Select column containing design weights</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Numeric Columns for Analysis</label>
+                            <div id="numericColumns" class="column-selector">
+                                <!-- Numeric columns will be populated here -->
+                            </div>
+                            <div class="form-text">Select columns to include in analysis</div>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAllNumeric()">Select All</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAllNumeric()">Deselect All</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <h6>📊 Data Preview (First 10 rows)</h6>
+                        <div id="dataPreview" class="preview-table">
+                            <!-- Data preview will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Processing Configuration Section -->
+<div id="configSection" class="row mb-4" style="display: none;">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">⚙️ Step 3: Processing Configuration</h5>
+            </div>
+            <div class="card-body">
+                <form id="processingForm" method="POST" action="{{ url_for('process_form') }}" enctype="multipart/form-data">
+                    <input type="hidden" id="fileInput" name="data_file" />
+                    
+                    <div class="row">
+                        <!-- Data Cleaning Configuration -->
+                        <div class="col-md-6">
+                            <h6>🧹 Data Cleaning</h6>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Missing Value Imputation</label>
+                                <select class="form-select" name="impute_method" id="imputeMethod">
+                                    <option value="None">No imputation</option>
+                                    <option value="Mean" selected>Mean</option>
+                                    <option value="Median">Median</option>
+                                    <option value="KNN">KNN (K=3)</option>
+                                </select>
+                                <div class="form-text">Choose method for handling missing values</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Outlier Detection</label>
+                                <select class="form-select" name="outlier_method" id="outlierMethod">
+                                    <option value="None">No outlier detection</option>
+                                    <option value="IQR" selected>IQR Method</option>
+                                    <option value="Z-score">Z-Score (>3σ)</option>
+                                    <option value="Winsorize">Winsorize (1st/99th percentile)</option>
+                                </select>
+                                <div class="form-text">Method for detecting outliers</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Outlier Action</label>
+                                <select class="form-select" name="outlier_action" id="outlierAction">
+                                    <option value="winsorize" selected>Winsorize (cap values)</option>
+                                    <option value="remove">Remove outliers</option>
+                                </select>
+                                <div class="form-text">How to handle detected outliers</div>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Configuration -->
+      <div class="col-md-6">
+                            <h6>🔧 Advanced Configuration</h6>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Rule-based Validation (JSON)</label>
+                                <textarea class="form-control" name="rules_json" id="rulesJson" rows="4" 
+                                          placeholder='{"age": {"min": 0, "max": 120}, "income": {"min": 0}}'></textarea>
+                                <div class="form-text">JSON rules for data validation</div>
+                                <div class="rule-example">
+                                    <strong>Example rules:</strong><br>
+                                    {"age": {"min": 0, "max": 120}, "income": {"min": 0}, "education": {"min": 0, "max": 25}}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Processing Options</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="generateVisualizations" name="generate_viz" checked>
+                                    <label class="form-check-label" for="generateVisualizations">
+                                        Generate data visualizations
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="includeOutliers" name="include_outliers" checked>
+                                    <label class="form-check-label" for="includeOutliers">
+                                        Include outlier analysis in report
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="detailedLogs" name="detailed_logs" checked>
+                                    <label class="form-check-label" for="detailedLogs">
+                                        Include detailed processing logs
+                                    </label>
+                                </div>
+                            </div>
+      </div>
+    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            🚀 Run Processing Pipeline
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                            🔄 Reset Form
+                        </button>
+    </div>
+  </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Processing Status -->
+<div id="processingStatus" class="row mb-4 processing-status">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">⏳ Processing Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="spinner-border text-primary me-3" role="status">
+                        <span class="visually-hidden">Processing...</span>
+                    </div>
+                    <div>
+                        <h6 class="mb-1">Processing your data...</h6>
+                        <p class="mb-0 text-muted">This may take a few moments depending on the dataset size.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pipeline Information -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">📋 Pipeline Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>🔄 Processing Steps:</h6>
+                        <ol>
+                            <li><strong>Data Upload:</strong> Validate and load survey data</li>
+                            <li><strong>Data Preview:</strong> Review structure and select columns</li>
+                            <li><strong>Missing Values:</strong> Apply selected imputation method</li>
+                            <li><strong>Outlier Detection:</strong> Identify and handle outliers</li>
+                            <li><strong>Weight Application:</strong> Apply design weights (if specified)</li>
+                            <li><strong>Rule Validation:</strong> Check data against validation rules</li>
+                            <li><strong>Analysis:</strong> Compute summary statistics and margins of error</li>
+                            <li><strong>Visualization:</strong> Generate histograms and charts</li>
+                            <li><strong>Report Generation:</strong> Create HTML and PDF reports</li>
+                        </ol>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>📊 Output Deliverables:</h6>
+                        <ul>
+                            <li><strong>Cleaned Dataset:</strong> Processed data ready for analysis</li>
+                            <li><strong>Processing Logs:</strong> Detailed workflow documentation</li>
+                            <li><strong>Summary Statistics:</strong> Weighted means and margins of error</li>
+                            <li><strong>Data Visualizations:</strong> Histograms and distribution plots</li>
+                            <li><strong>HTML Report:</strong> Interactive web-based report</li>
+                            <li><strong>PDF Report:</strong> Professional print-ready document</li>
+                            <li><strong>Quality Diagnostics:</strong> Data quality metrics and violations</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let uploadedFile = null;
+let previewState = null;
+
+function loadSampleData() {
+    console.log('loadSampleData function called');
+    // Create a sample file input
+    const sampleData = `age,income,education,weight,region
+25,45000,12,1.2,North
+30,52000,16,1.1,South
+35,48000,14,1.3,East
+28,38000,12,0.9,West
+42,65000,18,1.4,North
+33,55000,16,1.2,South
+29,42000,14,1.0,East
+38,58000,16,1.3,West
+45,72000,20,1.5,North
+31,49000,14,1.1,South`;
+    
+    const blob = new Blob([sampleData], { type: 'text/csv' });
+    const file = new File([blob], 'sample_survey_data.csv', { type: 'text/csv' });
+    
+    console.log('Sample file created:', file.name, file.size);
+    
+    // Create a new FileList-like object
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    
+    const fileInput = document.getElementById('dataFile');
+    fileInput.files = dataTransfer.files;
+    
+    console.log('File input updated, calling previewData');
+    previewData();
+}
+
+function previewData() {
+    console.log('previewData function called');
+    const fileInput = document.getElementById('dataFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Please select a file first.');
+        return;
+    }
+    
+    console.log('File selected:', file.name, file.size);
+    uploadedFile = file;
+    
+    // Show loading indicator
+    const dataPreview = document.getElementById('dataPreview');
+    dataPreview.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Loading preview...</p></div>';
+    
+    // Show preview section immediately
+    document.getElementById('previewSection').style.display = 'block';
+    document.getElementById('configSection').style.display = 'block';
+
+    // helper to render preview
+    function populatePreview(headers, data) {
+        previewState = { headers, data };
+        
+        const datasetInfo = document.getElementById('datasetInfo');
+        datasetInfo.innerHTML = `
+            <div class="alert alert-info">
+                <p><strong>File:</strong> ${file.name}</p>
+                <p><strong>Size:</strong> ${(file.size / 1024).toFixed(1)} KB</p>
+                <p><strong>Columns:</strong> ${headers.length}</p>
+                <p><strong>Preview rows:</strong> ${data.length}</p>
+            </div>
+        `;
+
+        const weightCol = document.getElementById('weightCol');
+        weightCol.innerHTML = '<option value="">No weights</option>';
+        headers.forEach(header => {
+            const option = document.createElement('option');
+            option.value = header;
+            option.textContent = header;
+            weightCol.appendChild(option);
+        });
+
+        const numericColumns = document.getElementById('numericColumns');
+        numericColumns.innerHTML = '';
+        headers.forEach((header, index) => {
+            if (isNumericColumn(data, index)) {
+                const div = document.createElement('div');
+                div.className = 'form-check';
+                div.innerHTML = `
+                    <input class="form-check-input" type="checkbox" id="col_${header.replace(/\s+/g, '_')}" value="${header}" checked>
+                    <label class="form-check-label" for="col_${header.replace(/\s+/g, '_')}">${header}</label>
+                `;
+                numericColumns.appendChild(div);
+            }
+        });
+
+        let tableHTML = '<div class="table-responsive"><table class="table table-sm table-striped table-bordered">';
+        tableHTML += '<thead class="table-dark"><tr>';
+        headers.forEach(header => { tableHTML += `<th>${header}</th>`; });
+        tableHTML += '</tr></thead>';
+        tableHTML += '<tbody>';
+        data.forEach(row => {
+            tableHTML += '<tr>';
+            row.forEach(cell => { tableHTML += `<td>${cell ?? ''}</td>`; });
+            tableHTML += '</tr>';
+        });
+        tableHTML += '</tbody></table></div>';
+        document.getElementById('dataPreview').innerHTML = tableHTML;
+
+        document.getElementById('previewSection').style.display = 'block';
+        document.getElementById('configSection').style.display = 'block';
+        document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Always try backend preview first (saves the file and sets session)
+    const formData = new FormData();
+    formData.append('data_file', file);
+    fetch('{{ url_for("preview_data") }}', { method: 'POST', body: formData })
+        .then(async resp => {
+            const text = await resp.text();
+            try { return JSON.parse(text); } catch (_) { throw new Error(text || 'Preview failed'); }
+        })
+        .then(json => {
+            if (json.error) { throw new Error(json.error); }
+            const headers = json.columns || [];
+            const rows = json.preview || [];
+            const data = rows.map(rowObj => headers.map(h => rowObj[h]));
+            if (!headers.length) { throw new Error('No columns detected'); }
+            populatePreview(headers, data);
+        })
+        .catch(err => {
+            console.warn('Server preview failed, attempting CSV fallback if applicable:', err);
+            const lower = file.name.toLowerCase();
+            if (lower.endsWith('.csv')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const csv = e.target.result;
+                        const lines = csv.split('\n');
+                        if (lines.length < 2) { alert('File appears empty or invalid.'); return; }
+                        const headers = lines[0].split(',').map(h => h.trim());
+                        const data = lines.slice(1, 11).filter(line => line.trim()).map(line => line.split(',').map(cell => cell.trim()));
+                        if (!headers.length) { alert('No headers found in the CSV.'); return; }
+                        populatePreview(headers, data);
+                    } catch (error) {
+                        console.error('CSV fallback parse error:', error);
+                        alert('Could not preview CSV. It will still process on submit.');
+                    }
+                };
+                reader.onerror = function() { alert('Error reading the file. Please try again.'); };
+                reader.readAsText(file);
+            } else {
+                alert(err && err.message ? err.message : 'Could not preview this file. It will still process on submit.');
+                document.getElementById('processingStatus').style.display = 'none';
+            }
+        });
+}
+
+function isNumericColumn(data, colIndex) {
+    // Check if column contains mostly numeric values
+    let numericCount = 0;
+    let totalCount = 0;
+    
+    data.forEach(row => {
+        if (row[colIndex] !== undefined && row[colIndex] !== null) {
+            totalCount++;
+            const value = row[colIndex].toString().trim();
+            if (!isNaN(value) && value !== '' && value !== 'NaN') {
+                numericCount++;
+            }
+        }
+    });
+    
+    return totalCount > 0 && (numericCount / totalCount) > 0.3; // Lower threshold for better detection
+}
+
+function resetForm() {
+    document.getElementById('uploadForm').reset();
+    document.getElementById('processingForm').reset();
+    document.getElementById('previewSection').style.display = 'none';
+    document.getElementById('configSection').style.display = 'none';
+    uploadedFile = null;
+    previewState = null;
+}
+
+function selectAllNumeric() {
+    const checkboxes = document.querySelectorAll('#numericColumns input[type="checkbox"]');
+    checkboxes.forEach(checkbox => checkbox.checked = true);
+}
+
+function deselectAllNumeric() {
+    const checkboxes = document.querySelectorAll('#numericColumns input[type="checkbox"]');
+    checkboxes.forEach(checkbox => checkbox.checked = false);
+}
+
+// Form submission
+document.getElementById('processingForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (!uploadedFile) {
+        alert('Please upload a file first.');
+        return;
+    }
+    
+    // Get selected weight column
+    const weightCol = document.getElementById('weightCol').value;
+    if (weightCol) {
+        // Add weight column to form data
+        const weightInput = document.createElement('input');
+        weightInput.type = 'hidden';
+        weightInput.name = 'weight_col';
+        weightInput.value = weightCol;
+        this.appendChild(weightInput);
+    }
+    
+    // Show processing status
+    document.getElementById('processingStatus').style.display = 'block';
+    
+    // Create FormData and append file
+    const formData = new FormData(this);
+    formData.set('data_file', uploadedFile);
+    
+    // Submit form
+    fetch('{{ url_for("process_form") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+        } else {
+            return response.text();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred during processing. Please try again.');
+        document.getElementById('processingStatus').style.display = 'none';
+    });
+});
+
+// Auto-hide processing status after 5 seconds
+setTimeout(() => {
+    document.getElementById('processingStatus').style.display = 'none';
+}, 5000);
+</script>
+{% endblock %}

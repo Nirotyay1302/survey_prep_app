@@ -1,0 +1,33 @@
+# Core App Framework
+Flask==2.3.2
+
+# Data Processing
+pandas==2.2.2
+numpy==1.26.4
+openpyxl==3.1.2
+
+# Visualization
+matplotlib==3.9.2
+seaborn==0.13.2
+kiwisolver==1.4.7
+cycler==0.12.1
+fonttools==4.53.1
+contourpy==1.2.1
+pyparsing==3.1.2
+
+# Database Connector
+mysql-connector-python==8.0.33
+
+# Authentication & Security
+bcrypt==4.0.1
+python-dotenv==1.0.1
+
+# Reporting
+WeasyPrint==62.3
+Jinja2==3.1.4
+
+# ML (optional)
+scikit-learn==1.5.1
+scipy==1.13.1
+joblib==1.4.2
+threadpoolctl==3.5.0

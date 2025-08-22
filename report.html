@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Survey Data Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1, h2 { color: #333; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        .log { background-color: #eef; padding: 10px; margin-bottom: 20px; border-radius: 5px; }
+        img { max-width: 400px; margin: 10px; border: 1px solid #ddd; padding: 5px; }
+        .plots { display: flex; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+    <h1>Survey Data Processing Report</h1>
+
+    <h2>Workflow Logs</h2>
+    <div class="log">
+        <ul>
+        
+            <li>Uploaded file</li>
+        
+            <li>Applied missing value imputation: Mean</li>
+        
+            <li>Applied outlier detection: IQR</li>
+        
+            <li>Applied weights: Week</li>
+        
+            <li>Computed weighted summaries for: Week</li>
+        
+        </ul>
+    </div>
+
+    <h2>Weighted Summary Statistics</h2>
+    <div>
+        <style type="text/css">
+</style>
+<table id="T_e155e">
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th id="T_e155e_level0_col0" class="col_heading level0 col0" >Weighted Mean</th>
+      <th id="T_e155e_level0_col1" class="col_heading level0 col1" >Margin of Error (95% CI)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_e155e_level0_row0" class="row_heading level0 row0" >Week</th>
+      <td id="T_e155e_row0_col0" class="data row0 col0" >5.3798</td>
+      <td id="T_e155e_row0_col1" class="data row0 col1" >0.6173</td>
+    </tr>
+  </tbody>
+</table>
+
+    </div>
+
+    <h2>Histograms</h2>
+    <div class="plots">
+    
+        <div>
+            <h3>Week</h3>
+            <img src="data:image/png;base64,hist_images\Week_hist.png" alt="Histogram of Week">
+        </div>
+    
+    </div>
+</body>
+</html>

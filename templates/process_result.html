@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Results · Survey Prep{% endblock %}
+{% block content %}
+        <h2 class="mb-4">Processing Results</h2>
+		<div class="card mb-3">
+			<div class="card-header">Workflow Logs</div>
+			<div class="card-body">
+				<ul>
+					{% for log in workflow_logs %}
+					<li>{{ log }}</li>
+					{% endfor %}
+				</ul>
+			</div>
+		</div>
+
+		<div class="card card-theme-green mb-3">
+			<div class="card-header">Weighted Summary</div>
+			<div class="card-body">
+				{{ summary_html | safe }}
+			</div>
+		</div>
+
+		<div class="card card-theme-amber mb-3">
+            <div class="card-header">Preview after Imputation</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    {{ preview_after_impute | safe }}
+                </div>
+            </div>
+        </div>
+
+        {% if preview_after_outliers %}
+        <div class="card mb-3">
+            <div class="card-header">Preview after Outlier Handling</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    {{ preview_after_outliers | safe }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+		<div class="card card-theme-amber mb-3">
+            <div class="card-header">Preview after Weights</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    {{ preview_after_weights | safe }}
+                </div>
+            </div>
+        </div>
+
+		<div class="card mb-3">
+			<div class="card-header">Histograms</div>
+			<div class="card-body">
+                <div class="row g-3">
+					{% for col, img in hist_images.items() %}
+                    <div class="col-12 col-sm-6 col-md-4 text-center">
+                        <h6>{{ col }}</h6>
+                        <img src="data:image/png;base64,{{ img }}" class="img-fluid" style="max-width: 100%; height: auto;" />
+                    </div>
+					{% endfor %}
+                </div>
+			</div>
+		</div>
+
+		<div class="d-flex flex-wrap gap-2 align-items-center">
+			<a href="{{ url_for('download_file', kind='html') }}" class="btn btn-success">Download HTML Report</a>
+			<a href="{{ url_for('download_file', kind='pdf') }}" class="btn btn-danger">Download PDF Report</a>
+			{% if job_id %}
+			<form method="POST" action="{{ url_for('save_job') }}" class="d-flex align-items-center gap-2">
+				<input type="hidden" name="job_id" value="{{ job_id }}" />
+				<input type="text" name="display_name" class="form-control form-control-sm" placeholder="Optional name (e.g., Wave 1 - Urban)" style="min-width:260px" />
+				<button class="btn btn-outline-primary btn-sm" type="submit">Save for Profile</button>
+			</form>
+			{% endif %}
+			<a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back</a>
+		</div>
+
+        <!-- Save Job Section -->
+        <div class="card card-theme-green mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">Save This Job</h5>
+          </div>
+          <div class="card-body">
+            <form method="POST" action="{{ url_for('save_job') }}" class="d-flex gap-3 align-items-end">
+              <div class="flex-grow-1">
+                <label for="display_name" class="form-label">Save with a custom name:</label>
+                <input type="text" name="display_name" id="display_name" class="form-control" 
+                       placeholder="e.g., Monthly Survey Analysis, Q1 Data Cleaned" 
+                       value="Processed_{{ job_id }}" />
+                <div class="form-text">Give your job a meaningful name for easy reference later.</div>
+              </div>
+              <input type="hidden" name="job_id" value="{{ job_id }}" />
+              <button class="btn btn-success" type="submit">
+                <i class="bi bi-bookmark-plus"></i> Save Job
+              </button>
+            </form>
+            <div class="mt-3">
+              <small class="text-muted">
+                ✓ Saved jobs will appear in your Dashboard's "Saved Jobs" tab<br>
+                ✓ Access them anytime from your Profile section<br>
+                ✓ Download reports and view details later
+              </small>
+            </div>
+          </div>
+        </div>
+{% endblock %}

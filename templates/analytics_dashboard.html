@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}Analytics · Survey Prep{% endblock %}
+{% block content %}
+  <h2 class="mb-4">Processing Analytics Dashboard</h2>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="row mb-4 g-3">
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="card-title">Total Pipeline Runs</h6>
+          <p class="display-6 mb-0">{{ stats.total_runs or 0 }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="card-title">Total Rows (after processing)</h6>
+          <p class="display-6 mb-0">{{ stats.total_rows_after or 0 }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="card-title">User</h6>
+          <p class="display-6 mb-0">{{ user.username }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">Recent Processing Jobs</div>
+    <div class="table-responsive">
+      <table class="table table-striped mb-0">
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Rows (before→after)</th>
+            <th>Imputation</th>
+            <th>Outliers</th>
+            <th>Weights</th>
+            <th>Violations</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td class="text-truncate" style="max-width: 200px;" title="{{ row.uploaded_filename }}">
+              {{ row.uploaded_filename }}
+            </td>
+            <td>{{ row.rows_before }}→{{ row.rows_after }}</td>
+            <td>{{ row.impute_method or 'None' }}</td>
+            <td>{{ row.outlier_method or 'None' }}</td>
+            <td>{{ row.weight_col or 'None' }}</td>
+            <td>{{ row.violations_count or 0 }}</td>
+            <td>{{ row.created_at.strftime('%Y-%m-%d %H:%M') if row.created_at else 'N/A' }}</td>
+                        <td>
+                <a href="{{ url_for('view_details', job_id=row.id) }}" class="btn btn-sm btn-outline-info">View</a>
+                <a href="{{ url_for('generate_report', job_id=row.id) }}" class="btn btn-sm btn-outline-warning">📄 Report</a>
+            </td>
+          </tr>
+          {% endfor %}
+          {% if not rows %}
+          <tr><td colspan="8" class="text-center">No processing jobs yet. <a href="{{ url_for('process_form') }}">Process your first file</a></td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if user.role == 'admin' and top_users %}
+  <div class="card">
+    <div class="card-header">Top Users (Admin View)</div>
+    <div class="table-responsive">
+      <table class="table table-striped mb-0">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Total Runs</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in top_users %}
+          <tr>
+            <td>{{ u.username }}</td>
+            <td>{{ u.runs }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="mt-3">
+    <a class="btn btn-primary" href="{{ url_for('process_form') }}">Process New Data</a>
+    <a class="btn btn-secondary" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+  </div>
+{% endblock %}

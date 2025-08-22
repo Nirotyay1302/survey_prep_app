@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Processing Results - Survey Prep App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Processing Results: {{ job.uploaded_filename }}</h2>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<!-- Job Summary -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📊 Processing Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <p><strong>File:</strong> {{ job.uploaded_filename }}</p>
+                        <p><strong>Rows:</strong> {{ job.rows_before }} → {{ job.rows_after }}</p>
+                        <p><strong>Imputation:</strong> {{ job.impute_method }}</p>
+                    </div>
+                    <div class="col-6">
+                        <p><strong>Outlier Method:</strong> {{ job.outlier_method }}</p>
+                        <p><strong>Weight Column:</strong> {{ job.weight_col or 'None' }}</p>
+                        <p><strong>Violations:</strong> {{ job.violations_count or 0 }}</p>
+                    </div>
+                </div>
+                <p><strong>Processed:</strong> {{ job.created_at.strftime('%Y-%m-%d %H:%M') if job.created_at else 'N/A' }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📋 Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-column gap-2">
+                    <a href="{{ url_for('generate_report', job_id=job.id) }}" class="btn btn-primary">📄 Generate Report</a>
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('download_data', job_id=job.id, format='csv') }}" class="btn btn-outline-primary">📥 CSV</a>
+                        <a href="{{ url_for('download_data', job_id=job.id, format='xlsx') }}" class="btn btn-outline-success">📥 Excel</a>
+                    </div>
+                    {% if not job.is_saved %}
+                    <form method="POST" action="{{ url_for('save_job_route') }}" class="d-flex gap-2">
+                        <input type="hidden" name="job_id" value="{{ job.id }}" />
+                        <input type="text" name="display_name" class="form-control" placeholder="Save as..." />
+                        <button class="btn btn-outline-success" type="submit">💾 Save Job</button>
+                    </form>
+                    {% else %}
+                    <span class="badge bg-success">✅ Saved as: {{ job.display_name }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📈 Summary Statistics</h5>
+            </div>
+            <div class="card-body">
+                {% if summary_df is defined and not summary_df.empty %}
+                <div class="table-responsive">
+                    {{ summary_df.to_html(classes='table table-striped', index=False) | safe }}
+                </div>
+                {% else %}
+                <p class="text-muted">No summary statistics available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Visualizations -->
+{% if hist_images %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📊 Data Visualizations</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for column, image_data in hist_images.items() %}
+                    <div class="col-md-6 mb-3">
+                        <div class="text-center">
+                            <h6>{{ column }}</h6>
+                            <img src="data:image/png;base64,{{ image_data }}" class="img-fluid" alt="Histogram of {{ column }}" />
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script></script>
+{% endblock %}
