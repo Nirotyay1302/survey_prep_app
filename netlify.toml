@@ -6,8 +6,32 @@
 [build.environment]
   NODE_ENV = "production"
 
-# Optional: redirect everything to backend URL if desired
-# [[redirects]]
-#   from = "/api/*"
-#   to = "https://your-backend.example.com/:splat"
-#   status = 200
+[[redirects]]
+  from = "/process-form"
+  to = "https://BACKEND_URL/process-form"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/preview-data"
+  to = "https://BACKEND_URL/preview-data"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/view-details/*"
+  to = "https://BACKEND_URL/view-details/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/generate-report/*"
+  to = "https://BACKEND_URL/generate-report/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/download-*"
+  to = "https://BACKEND_URL/:splat"
+  status = 200
+  force = true
