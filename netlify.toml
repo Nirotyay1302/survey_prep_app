@@ -8,30 +8,30 @@
 
 [[redirects]]
   from = "/process-form"
-  to = "https://BACKEND_URL/process-form"
+  to = "https://survey-prep-app.onrender.com/process-form"
   status = 200
   force = true
 
 [[redirects]]
   from = "/preview-data"
-  to = "https://BACKEND_URL/preview-data"
+  to = "https://survey-prep-app.onrender.com/preview-data"
   status = 200
   force = true
 
 [[redirects]]
   from = "/view-details/*"
-  to = "https://BACKEND_URL/view-details/:splat"
+  to = "https://survey-prep-app.onrender.com/view-details/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/generate-report/*"
-  to = "https://BACKEND_URL/generate-report/:splat"
+  to = "https://survey-prep-app.onrender.com/generate-report/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/download-*"
-  to = "https://BACKEND_URL/:splat"
+  to = "https://survey-prep-app.onrender.com/:splat"
   status = 200
   force = true
