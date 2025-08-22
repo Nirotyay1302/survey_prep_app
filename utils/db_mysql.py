@@ -70,6 +70,11 @@ def get_connection(create_db_if_missing=True):
             connect_kwargs["ssl_ca"] = DB_SSL_CA
             connect_kwargs["ssl_verify_cert"] = True
         conn = mysql.connector.connect(**connect_kwargs)
+        
+        # Always check if tables exist and create them if needed
+        if create_db_if_missing:
+            ensure_tables_exist(conn)
+            
         return conn
     except mysql.connector.Error as err:
         if err.errno == errorcode.ER_BAD_DB_ERROR and create_db_if_missing:
@@ -77,6 +82,25 @@ def get_connection(create_db_if_missing=True):
             return get_connection(create_db_if_missing=False)
         else:
             raise
+
+def ensure_tables_exist(conn):
+    """Ensure all required tables exist, create them if they don't."""
+    try:
+        cursor = conn.cursor()
+        
+        # Check if users table exists
+        cursor.execute("SHOW TABLES LIKE 'users'")
+        if not cursor.fetchone():
+            print("DEBUG: users table doesn't exist, creating it...")
+            create_tables()
+        else:
+            print("DEBUG: users table exists")
+            
+        cursor.close()
+    except Exception as e:
+        print(f"DEBUG: Error checking tables: {e}")
+        # If there's an error, try to create tables anyway
+        create_tables()
 
 # --- Database & Tables ---
 def create_database():
