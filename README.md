@@ -22,6 +22,7 @@ Deploy
 
 - Backend: Render/Heroku/Fly.io with Python, set env vars above.
 - Static front-end (optional landing): Netlify. Point to `templates` static build or a dedicated front-end.
+- On Render, set Python version to 3.11 (runtime.txt) to avoid building pandas on 3.13.
 An interactive Streamlit web application for uploading survey data, configuring analysis parameters, generating insightful reports, and exporting them as HTML or PDF dashboards with colorful visualizations.
 
 🚀 Features
