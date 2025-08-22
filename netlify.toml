@@ -1,0 +1,12 @@
+[build]
+  command = ""
+  publish = "public"
+
+[build.environment]
+  NODE_ENV = "production"
+
+# Optional: redirect everything to backend URL if desired
+# [[redirects]]
+#   from = "/api/*"
+#   to = "https://your-backend.example.com/:splat"
+#   status = 200
