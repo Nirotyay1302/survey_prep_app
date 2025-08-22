@@ -1,6 +1,7 @@
 [build]
+  base = "public"
   command = ""
-  publish = "public"
+  publish = "."
 
 [build.environment]
   NODE_ENV = "production"
